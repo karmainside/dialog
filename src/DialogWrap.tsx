@@ -1,6 +1,6 @@
 import React from 'react';
 import Dialog from './Dialog';
-import getContainerRenderMixin from 'rc-util/lib/getContainerRenderMixin';
+import getContainerRenderMixin from './getContainerRenderMixin.jsx';
 import IDialogPropTypes from './IDialogPropTypes';
 
 const DialogWrap = React.createClass<IDialogPropTypes, any>({
