@@ -432,8 +432,15 @@
 /* 6 */
 /***/ function(module, exports) {
 
+	/*
+	object-assign
+	(c) Sindre Sorhus
+	@license MIT
+	*/
+	
 	'use strict';
 	/* eslint-disable no-unused-vars */
+	var getOwnPropertySymbols = Object.getOwnPropertySymbols;
 	var hasOwnProperty = Object.prototype.hasOwnProperty;
 	var propIsEnumerable = Object.prototype.propertyIsEnumerable;
 	
@@ -454,7 +461,7 @@
 			// Detect buggy property enumeration order in older V8 versions.
 	
 			// https://bugs.chromium.org/p/v8/issues/detail?id=4118
-			var test1 = new String('abc');  // eslint-disable-line
+			var test1 = new String('abc');  // eslint-disable-line no-new-wrappers
 			test1[5] = 'de';
 			if (Object.getOwnPropertyNames(test1)[0] === '5') {
 				return false;
@@ -483,7 +490,7 @@
 			}
 	
 			return true;
-		} catch (e) {
+		} catch (err) {
 			// We don't expect any of the above to throw, but better to be safe.
 			return false;
 		}
@@ -503,8 +510,8 @@
 				}
 			}
 	
-			if (Object.getOwnPropertySymbols) {
-				symbols = Object.getOwnPropertySymbols(from);
+			if (getOwnPropertySymbols) {
+				symbols = getOwnPropertySymbols(from);
 				for (var i = 0; i < symbols.length; i++) {
 					if (propIsEnumerable.call(from, symbols[i])) {
 						to[symbols[i]] = from[symbols[i]];
@@ -23026,7 +23033,7 @@
 	  value: true
 	});
 	
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 	
 	var _Event = __webpack_require__(182);
 	
@@ -23649,95 +23656,105 @@
 	'use strict';
 	
 	Object.defineProperty(exports, "__esModule", {
-	  value: true
+	    value: true
 	});
-	
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-	
-	exports["default"] = getContainerRenderMixin;
+	exports.default = getContainerRenderMixin;
 	
 	var _reactDom = __webpack_require__(36);
 	
 	var _reactDom2 = _interopRequireDefault(_reactDom);
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var __assign = undefined && undefined.__assign || Object.assign || function (t) {
+	    for (var s, i = 1, n = arguments.length; i < n; i++) {
+	        s = arguments[i];
+	        for (var p in s) {
+	            if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+	        }
+	    }
+	    return t;
+	};
 	
 	function defaultGetContainer() {
-	  var container = document.createElement('div');
-	  document.body.appendChild(container);
-	  return container;
+	    var container = document.createElement('div');
+	    var element = document.getElementById('multiScoutContainer');
+	    if (element) {
+	        element.appendChild(container);
+	    } else {
+	        document.body.appendChild(container);
+	    }
+	    return container;
 	}
-	
 	function getContainerRenderMixin(config) {
-	  var _config$autoMount = config.autoMount;
-	  var autoMount = _config$autoMount === undefined ? true : _config$autoMount;
-	  var _config$autoDestroy = config.autoDestroy;
-	  var autoDestroy = _config$autoDestroy === undefined ? true : _config$autoDestroy;
-	  var isVisible = config.isVisible;
-	  var getComponent = config.getComponent;
-	  var _config$getContainer = config.getContainer;
-	  var getContainer = _config$getContainer === undefined ? defaultGetContainer : _config$getContainer;
+	    var _config$autoMount = config.autoMount,
+	        autoMount = _config$autoMount === undefined ? true : _config$autoMount,
+	        _config$autoDestroy = config.autoDestroy,
+	        autoDestroy = _config$autoDestroy === undefined ? true : _config$autoDestroy,
+	        isVisible = config.isVisible,
+	        getComponent = config.getComponent,
+	        _config$getContainer = config.getContainer,
+	        getContainer = _config$getContainer === undefined ? defaultGetContainer : _config$getContainer;
 	
-	
-	  var mixin = void 0;
-	
-	  function _renderComponent(instance, componentArg, ready) {
-	    if (!isVisible || instance._component || isVisible(instance)) {
-	      if (!instance._container) {
-	        instance._container = getContainer(instance);
-	      }
-	      _reactDom2["default"].unstable_renderSubtreeIntoContainer(instance, getComponent(instance, componentArg), instance._container, function callback() {
-	        instance._component = this;
-	        if (ready) {
-	          ready.call(this);
+	    var mixin = void 0;
+	    function _renderComponent(instance, componentArg, ready) {
+	        if (!isVisible || instance._component || isVisible(instance)) {
+	            if (!instance._container) {
+	                instance._container = getContainer(instance);
+	            }
+	            var component = void 0;
+	            if (instance.getComponent) {
+	                component = instance.getComponent(componentArg);
+	            } else {
+	                component = getComponent(instance, componentArg);
+	            }
+	            _reactDom2.default.unstable_renderSubtreeIntoContainer(instance, component, instance._container, function callback() {
+	                instance._component = this;
+	                if (ready) {
+	                    ready.call(this);
+	                }
+	            });
 	        }
-	      });
 	    }
-	  }
-	
-	  if (autoMount) {
-	    mixin = _extends({}, mixin, {
-	      componentDidMount: function componentDidMount() {
-	        _renderComponent(this);
-	      },
-	      componentDidUpdate: function componentDidUpdate() {
-	        _renderComponent(this);
-	      }
-	    });
-	  }
-	
-	  if (!autoMount || !autoDestroy) {
-	    mixin = _extends({}, mixin, {
-	      renderComponent: function renderComponent(componentArg, ready) {
-	        _renderComponent(this, componentArg, ready);
-	      }
-	    });
-	  }
-	
-	  function _removeContainer(instance) {
-	    if (instance._container) {
-	      var container = instance._container;
-	      _reactDom2["default"].unmountComponentAtNode(container);
-	      container.parentNode.removeChild(container);
-	      instance._container = null;
+	    if (autoMount) {
+	        mixin = __assign({}, mixin, {
+	            componentDidMount: function componentDidMount() {
+	                _renderComponent(this);
+	            },
+	            componentDidUpdate: function componentDidUpdate() {
+	                _renderComponent(this);
+	            }
+	        });
 	    }
-	  }
-	
-	  if (autoDestroy) {
-	    mixin = _extends({}, mixin, {
-	      componentWillUnmount: function componentWillUnmount() {
-	        _removeContainer(this);
-	      }
-	    });
-	  } else {
-	    mixin = _extends({}, mixin, {
-	      removeContainer: function removeContainer() {
-	        _removeContainer(this);
-	      }
-	    });
-	  }
-	
-	  return mixin;
+	    if (!autoMount || !autoDestroy) {
+	        mixin = __assign({}, mixin, {
+	            renderComponent: function renderComponent(componentArg, ready) {
+	                _renderComponent(this, componentArg, ready);
+	            }
+	        });
+	    }
+	    function _removeContainer(instance) {
+	        if (instance._container) {
+	            var container = instance._container;
+	            _reactDom2.default.unmountComponentAtNode(container);
+	            container.parentNode.removeChild(container);
+	            instance._container = null;
+	        }
+	    }
+	    if (autoDestroy) {
+	        mixin = __assign({}, mixin, {
+	            componentWillUnmount: function componentWillUnmount() {
+	                _removeContainer(this);
+	            }
+	        });
+	    } else {
+	        mixin = __assign({}, mixin, {
+	            removeContainer: function removeContainer() {
+	                _removeContainer(this);
+	            }
+	        });
+	    }
+	    return mixin;
 	}
 	module.exports = exports['default'];
 
